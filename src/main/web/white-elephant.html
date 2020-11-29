@@ -12,11 +12,11 @@
             padding-bottom: 20px;
         }
 
-        *:valid {
+        input:valid {
             border: 3px solid lightgrey;
             background-color: white;
         }
-        *:invalid {
+        input:invalid {
             border: 3px solid rgb(0,255,0);
             background-color: rgb(200,255,200);
         }
@@ -25,8 +25,16 @@
             display: inline-block;
         }
 
-        input[type='button'] {
+        button {
             font-size: larger;
+        }
+
+        .note {
+            color: gray;
+        }
+
+        #logo {
+            border-radius: 25px;
         }
 
     </style>
@@ -122,6 +130,7 @@
 </head>
 <body>
 
+<img id="logo" src="../../../white-elephant.png" width="300" style="float: right;"/>
 <h1>White Elephant Gift Exchange</h1>
 
 <h3>Rules:</h3>
@@ -148,10 +157,13 @@
 </p>
 
 <h3>Signup:</h3>
+<form>
+
 <div>
-Your name:<br/>
+Your name:<span class="note"> (3-50 characters)</span><br/>
 <input type="text"
        maxlength="50"
+       minlength="3"
        size="50"
        placeholder="E.g. Jane Smyth"
        required="required"
@@ -159,9 +171,10 @@ Your name:<br/>
 </div>
 
 <div>
-Describe your wrapped present:<br/>
+Describe your wrapped present:<span class="note"> (5-70 characters)</span><br/>
 <input type="text"
        maxlength="70"
+       minlength="5"
        size="70"
        placeholder="E.g. 'Elegantly wrapped in floral paper with an over-sized bow.' OR 'Smells faintly of onions.'"
        required="required"
@@ -175,9 +188,10 @@ Describe your wrapped present:<br/>
 </div>
 
 <div>
-A short description of your opened present:<br/>
+A short description of your opened present:<span class="note"> (5-70 characters)</span><br/>
 <input type="text"
        maxlength="70"
+       minlength="5"
        size="70"
        placeholder="E.g. A book called 'Dirk Gently's Holistic Detective Agency'"
        required="required"
@@ -185,13 +199,13 @@ A short description of your opened present:<br/>
 </div>
 
 <div>
-A longer description of your opened present:<br/>
+A longer description of your opened present:<span class="note"> (0-1000 characters)</span><br/>
     <textarea rows="6"
               cols="100"
+              maxlength="1000"
               placeholder="E.g. A very funny book called 'Dirk Gently's Holistic Detective Agency' by the world famous author
 Douglas Adams about the interconnectedness of all things. The author may have had the influence of
 some performance-enhancing substances in the creation of this work."
-              required="required"
               onchange="setOpenedLong(this)"></textarea>
 </div>
 
@@ -220,8 +234,10 @@ some performance-enhancing substances in the creation of this work."
 
 <div id="output"></div>
 
-<input type="button" value="Enter the game!" onclick="downloadData();"/>
-A file will be downloaded with your entry. Send this to the organizer.
+<!--<input type="button" value="Enter the game!" onclick="downloadData();"/>-->
+A file will be downloaded with your entry. Send this to the organizer.<br/>
+    <button type="submit" onclick="downloadData();">Enter the game!</button>
+</form>
 
 </body>
 </html>
