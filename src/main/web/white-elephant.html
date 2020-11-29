@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>White Elephant Gift Exchange</title>
+    <style>
+
+        html {
+            font-family: Helvetica;
+        }
+
+        div {
+            padding-bottom: 20px;
+        }
+
+        *:valid {
+            border: 3px solid lightgrey;
+            background-color: white;
+        }
+        *:invalid {
+            border: 3px solid rgb(0,255,0);
+            background-color: rgb(200,255,200);
+        }
+
+        div.imageupload {
+            display: inline-block;
+        }
+
+        input[type='button'] {
+            font-size: larger;
+        }
+
+    </style>
+    <script>
+
+        var output = {
+            shared: 'shared'
+        };
+
+        function updateOutput() {
+            // uncomment for debug
+            // document.getElementById("output").innerText = JSON.stringify(output);
+        }
+
+        function setName(element) {
+            console.log(element);
+            output['name'] = element.value;
+            updateOutput();
+        }
+        function setShared(element) {
+            console.log(element);
+            output['shared'] = element.id;
+            updateOutput();
+        }
+        function setWrapped(element) {
+            console.log(element);
+            output['wrapped'] = element.value;
+            updateOutput();
+        }
+        function setOpened(element) {
+            console.log(element);
+            output['opened'] = element.value;
+            updateOutput();
+        }
+        function setOpenedLong(element) {
+            console.log(element);
+            output['opened-long'] = element.value;
+            updateOutput();
+        }
+
+        function setImage(imgNumber, element) {
+            if (element.files && element.files[0]) {
+                const imgId = "image".concat(imgNumber)
+                const img = document.createElement("img");
+                img.src = URL.createObjectURL(element.files[0]);
+                img.onload =  function addToOutput() {
+                    const canvas = document.getElementById(imgId);
+                    // document.body.appendChild(canvas);
+                    const xsf = 400 / this.width;
+                    const ysf = 400 / this.height;
+                    const sf = Math.min(xsf,ysf);
+                    canvas.width = this.width * sf;
+                    canvas.height = this.height * sf;
+                    console.log(canvas.width , this.width * sf);
+                    console.log(canvas.height , this.height * sf);
+                    const context = canvas.getContext('2d');
+                    context.drawImage(this,
+                        // 0, 0, this.width, this.height,
+                        0, 0, canvas.width, canvas.height
+                    );
+                    output[imgId] = canvas.toDataURL();
+                    updateOutput();
+                };
+            }
+        }
+
+        function makeid(length) {
+            var result           = '';
+            var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var charactersLength = characters.length;
+            for ( var i = 0; i < length; i++ ) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+
+        function downloadData() {
+            const filename = ''.concat(
+                'white-elephant-',
+                output['name'].replace(/\W+/g,''),
+                '-', makeid(8), '.json')
+            const url = URL.createObjectURL(
+                new Blob([JSON.stringify(output)]));
+            const a = document.createElement('a');
+            a.setAttribute('download', filename);
+            a.setAttribute('href', url);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+    </script>
+</head>
+<body>
+
+<h1>White Elephant Gift Exchange</h1>
+
+<h3>Rules:</h3>
+<p>
+    Everyone who wants to play buys a present worth roughly &pound;5 - &pound;15.
+</p>
+<p>
+    Every player takes it in turn to pick a present. (The order of play will be assigned randomly.)
+    They may either pick an unopened present, in which case they open it and it is theirs (for now!)
+    or they may pick another player's opened present to steal, in which case it becomes theirs.
+</p>
+<p>
+    If your present is stolen then you immediately take another turn,
+    either opening a new present or stealing an open one.
+</p>
+<p>
+    You may not immediately steal back the present that was just stolen from you.
+</p>
+<p>
+    A present may have no more than 3 owners. This means that it may be stolen up to twice, but no more.
+</p>
+<p>
+    When all turns have been taken, every present will have an owner. We will then co-ordinate postage somehow...?
+</p>
+
+<h3>Signup:</h3>
+<div>
+Your name:<br/>
+<input type="text"
+       maxlength="50"
+       size="50"
+       placeholder="E.g. Jane Smyth"
+       required="required"
+       onchange="setName(this)"/>
+</div>
+
+<div>
+Describe your wrapped present:<br/>
+<input type="text"
+       maxlength="70"
+       size="70"
+       placeholder="E.g. 'Elegantly wrapped in floral paper with an over-sized bow.' OR 'Smells faintly of onions.'"
+       required="required"
+       onchange="setWrapped(this)"/>
+    <br/>
+    <input id="notshared" type="radio" name="shared" onchange="setShared(this)"/>
+    <label for="notshared">Use this description for <em>my</em> present.</label>
+    <br/>
+    <input id="shared" type="radio" name="shared" onchange="setShared(this)" checked="checked"/>
+    <label for="shared">This description may be randomly assigned to any present.</label>
+</div>
+
+<div>
+A short description of your opened present:<br/>
+<input type="text"
+       maxlength="70"
+       size="70"
+       placeholder="E.g. A book called 'Dirk Gently's Holistic Detective Agency'"
+       required="required"
+       onchange="setOpened(this)"/>
+</div>
+
+<div>
+A longer description of your opened present:<br/>
+    <textarea rows="6"
+              cols="100"
+              placeholder="E.g. A very funny book called 'Dirk Gently's Holistic Detective Agency' by the world famous author
+Douglas Adams about the interconnectedness of all things. The author may have had the influence of
+some performance-enhancing substances in the creation of this work."
+              required="required"
+              onchange="setOpenedLong(this)"></textarea>
+</div>
+
+
+<div class="imageupload">
+    <canvas id="image1"></canvas><br/>
+    Upload an image of your opened present (yes please!)<br/>
+    <input type='file' onchange="setImage(1, this)" required="required"/><br/>
+</div>
+
+<div class="imageupload">
+    <canvas id="image2"></canvas><br/>
+    Upload a second image of your opened present (optional)<br/>
+    <input type='file' onchange="setImage(2, this)"/><br/>
+</div>
+
+<div class="imageupload">
+    <canvas id="image3"></canvas><br/>
+    Upload a third image of your opened present (optional)<br/>
+    <input type='file' onchange="setImage(3, this)"/><br/>
+</div>
+
+<br>
+
+<img id="myImg" src="#" alt="your image" style="display: none">
+
+<div id="output"></div>
+
+<input type="button" value="Enter the game!" onclick="downloadData();"/>
+A file will be downloaded with your entry. Send this to the organizer.
+
+</body>
+</html>
