@@ -12,11 +12,11 @@
             padding-bottom: 20px;
         }
 
-        input:valid {
+        input:valid, textarea:valid {
             border: 3px solid lightgrey;
             background-color: white;
         }
-        input:invalid {
+        input:invalid, textarea:invalid {
             border: 3px solid rgb(0,255,0);
             background-color: rgb(200,255,200);
         }
@@ -30,11 +30,20 @@
         }
 
         .note {
-            color: gray;
+            color: #ffc800;
         }
 
         #logo {
             border-radius: 25px;
+        }
+
+        .attention {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
+        .underline {
+            text-decoration: underline;
         }
 
     </style>
@@ -74,6 +83,11 @@
             output['opened-long'] = element.value;
             updateOutput();
         }
+        function setAddress(element) {
+            console.log(element);
+            output['address'] = element.value;
+            updateOutput();
+        }
 
         function setImage(imgNumber, element) {
             if (element.files && element.files[0]) {
@@ -83,8 +97,8 @@
                 img.onload =  function addToOutput() {
                     const canvas = document.getElementById(imgId);
                     // document.body.appendChild(canvas);
-                    const xsf = 400 / this.width;
-                    const ysf = 400 / this.height;
+                    const xsf = 600 / this.width;
+                    const ysf = 600 / this.height;
                     const sf = Math.min(xsf,ysf);
                     canvas.width = this.width * sf;
                     canvas.height = this.height * sf;
@@ -124,13 +138,14 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            alert('You now need to send the downloaded file to your organiser to complete the submission process!');
         }
 
     </script>
 </head>
 <body>
 
-<img id="logo" src="../../../white-elephant.png" width="300" style="float: right;"/>
+<img id="logo" src="white-elephant.png" width="300" style="float: right;"/>
 <h1>White Elephant Gift Exchange</h1>
 
 <h3>Rules:</h3>
@@ -157,86 +172,110 @@
 </p>
 
 <h3>Signup:</h3>
-<form>
+<form id="signup" onsubmit="downloadData();">
 
-<div>
-Your name:<span class="note"> (3-50 characters)</span><br/>
-<input type="text"
-       maxlength="50"
-       minlength="3"
-       size="50"
-       placeholder="E.g. Jane Smyth"
-       required="required"
-       onchange="setName(this)"/>
-</div>
+    <div>
+        <label>
+            Your name:<span class="note"> (3-28 characters)</span><br/>
+            <input type="text"
+                   maxlength="28"
+                   minlength="3"
+                   size="28"
+                   placeholder="E.g. Jane S."
+                   required="required"
+                   onchange="setName(this)"/>
+        </label>
+    </div>
 
-<div>
-Describe your wrapped present:<span class="note"> (5-70 characters)</span><br/>
-<input type="text"
-       maxlength="70"
-       minlength="5"
-       size="70"
-       placeholder="E.g. 'Elegantly wrapped in floral paper with an over-sized bow.' OR 'Smells faintly of onions.'"
-       required="required"
-       onchange="setWrapped(this)"/>
-    <br/>
-    <input id="notshared" type="radio" name="shared" onchange="setShared(this)"/>
-    <label for="notshared">Use this description for <em>my</em> present.</label>
-    <br/>
-    <input id="shared" type="radio" name="shared" onchange="setShared(this)" checked="checked"/>
-    <label for="shared">This description may be randomly assigned to any present.</label>
-</div>
+    <div>
+        <label>
+            Describe your wrapped present:<span class="note"> (5-70 characters)</span><br/>
+            <input type="text"
+                   maxlength="70"
+                   minlength="5"
+                   size="70"
+                   placeholder="E.g. 'Elegantly wrapped in floral paper with an over-sized bow.' OR 'Smells faintly of onions.'"
+                   required="required"
+                   onchange="setWrapped(this)"/>
+        </label>
+        <br/>
+        <input id="notshared" type="radio" name="shared" onchange="setShared(this)"/>
+        <label for="notshared">Use this description for <em>my</em> present.</label>
+        <br/>
+        <input id="shared" type="radio" name="shared" onchange="setShared(this)" checked="checked"/>
+        <label for="shared">This description may be randomly assigned to any present.</label>
+    </div>
 
-<div>
-A short description of your opened present:<span class="note"> (5-70 characters)</span><br/>
-<input type="text"
-       maxlength="70"
-       minlength="5"
-       size="70"
-       placeholder="E.g. A book called 'Dirk Gently's Holistic Detective Agency'"
-       required="required"
-       onchange="setOpened(this)"/>
-</div>
+    <div>
+        <label>
+            A short description of your opened present:<span class="note"> (5-70 characters)</span><br/>
+            <input type="text"
+                   maxlength="70"
+                   minlength="5"
+                   size="70"
+                   placeholder="E.g. A book called 'Dirk Gently's Holistic Detective Agency'"
+                   required="required"
+                   onchange="setOpened(this)"/>
+        </label>
+    </div>
 
-<div>
-A longer description of your opened present:<span class="note"> (0-1000 characters)</span><br/>
-    <textarea rows="6"
-              cols="100"
-              maxlength="1000"
-              placeholder="E.g. A very funny book called 'Dirk Gently's Holistic Detective Agency' by the world famous author
+    <div>
+        <label>
+            A longer description of your opened present:<span class="note"> (0-1000 characters)</span><br/>
+            <textarea rows="6"
+                      cols="100"
+                      maxlength="1000"
+                      placeholder="E.g. A very funny book called 'Dirk Gently's Holistic Detective Agency' by the world famous author
 Douglas Adams about the interconnectedness of all things. The author may have had the influence of
 some performance-enhancing substances in the creation of this work."
-              onchange="setOpenedLong(this)"></textarea>
-</div>
+                      onchange="setOpenedLong(this)"></textarea>
+        </label>
+    </div>
+<!--    <div>-->
+<!--        <label>-->
+<!--            A UK postal address:<br/>-->
+<!--            <textarea rows="6"-->
+<!--                      cols="100"-->
+<!--                      minlength="1"-->
+<!--                      maxlength="1000"-->
+<!--                      required="required"-->
+<!--                      placeholder="Your present will have to be posted somewhere!"-->
+<!--                      onchange="setAddress(this)"></textarea>-->
+<!--        </label>-->
+<!--        <br/>-->
+<!--        <input id="addressconsent" type="checkbox" required="required">-->
+<!--        <label for="addressconsent">I consent to my address being shared with one sender to post me the present I win.</label>-->
+<!--    </div>-->
 
+    <div class="imageupload">
+        <canvas id="image1"></canvas><br/>
+        Upload an image of your opened present (yes please!)<br/>
+        <input type='file' onchange="setImage(1, this)" required="required"/><br/>
+    </div>
 
-<div class="imageupload">
-    <canvas id="image1"></canvas><br/>
-    Upload an image of your opened present (yes please!)<br/>
-    <input type='file' onchange="setImage(1, this)" required="required"/><br/>
-</div>
+    <div class="imageupload">
+        <canvas id="image2"></canvas><br/>
+        Upload a second image of your opened present (optional)<br/>
+        <input type='file' onchange="setImage(2, this)"/><br/>
+    </div>
 
-<div class="imageupload">
-    <canvas id="image2"></canvas><br/>
-    Upload a second image of your opened present (optional)<br/>
-    <input type='file' onchange="setImage(2, this)"/><br/>
-</div>
+    <div class="imageupload">
+        <canvas id="image3"></canvas><br/>
+        Upload a third image of your opened present (optional)<br/>
+        <input type='file' onchange="setImage(3, this)"/><br/>
+    </div>
 
-<div class="imageupload">
-    <canvas id="image3"></canvas><br/>
-    Upload a third image of your opened present (optional)<br/>
-    <input type='file' onchange="setImage(3, this)"/><br/>
-</div>
+    <br>
 
-<br>
+    <img id="myImg" src="#" alt="your image" style="display: none">
 
-<img id="myImg" src="#" alt="your image" style="display: none">
+    <div id="output"></div>
 
-<div id="output"></div>
-
-<!--<input type="button" value="Enter the game!" onclick="downloadData();"/>-->
-A file will be downloaded with your entry. Send this to the organizer.<br/>
-    <button type="submit" onclick="downloadData();">Enter the game!</button>
+    <!--<input type="button" value="Enter the game!" onclick="downloadData();"/>-->
+    A file will be downloaded with your entry.<br/>
+    <span class="attention">Send the downloaded file to your organiser.</span>
+    <br/>
+    <button type="submit"><span class="underline">&dArr;</span> Download my submission!</button>
 </form>
 
 </body>
