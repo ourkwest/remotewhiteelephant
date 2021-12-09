@@ -406,10 +406,17 @@
   (status))
 
 (comment
-  (initialise "/home/peter/personal/white-elephant-test")
-  (initialise "/home/peter/personal/white-elephant-data")
+  (initialise "/path/to/directory/containing/files")
+
+  ; see wrapped presents
+  (->> data deref
+       :presents
+       (map :wrapped)
+       shuffle
+       (string/join "\n"))
+
   ; see data safely
   (-> data
       deref
       (update :presents (fn [presents]
-                          (map #(dissoc % :opened :opened-long :wrapped) presents)))))
+                          (map #(select-keys % [:index :opened :opened-long]) presents)))))
