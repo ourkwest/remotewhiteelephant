@@ -9,6 +9,6 @@
 * What's a White Elephant Gift Exchange?
     * https://en.wikipedia.org/wiki/White_elephant_gift_exchange - although the limits here are slightly different: no immediate resteals and only 2 steals per present for the whole game. (Fork it if you want something else!)
 * Do I need a Clojure REPL?
-    * No, but you'll need to re-write a lot of code, or find another way to run it.
+    * Yes, but it's quite easy to start one.
 * How do we organise posting the presents?
     * No idea. I've not run this yet. I suggest a spreadsheet where people can add their addresses, and then the givers will know where to post their gift.

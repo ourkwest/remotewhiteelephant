@@ -4,29 +4,40 @@
     [clojure.string :as string]
     [clojure.core.async :as async]
     [cheshire.core :as json]
-    [see :as see])
+    [see :as see]
+    [clojure.edn :as edn])
   (:import
     [javax.imageio ImageIO]
     [java.util Base64 Base64$Decoder Random]
-    [java.io ByteArrayInputStream Writer]
+    [java.io ByteArrayInputStream Writer ByteArrayOutputStream]
     [java.awt.image BufferedImage]
     [java.awt Graphics2D Image Color Font BasicStroke]
     [java.lang Math$RandomNumberGeneratorHolder]
-    [java.time Instant]))
-
-;;; TODO: ;;;
-; 2. check the data is valid (more in webpage?)
-; 6. persist game state to disk in case of accidents?
+    [java.time Instant LocalDate]))
 
 
 (def ^Base64$Decoder decoder (Base64/getDecoder))
 (def encoding-prefix "data:image/png;base64,")
 
-(defn import-image [^String data-url]
+(defn ^BufferedImage import-image [^String data-url]
   (when data-url
     (let [data-string (subs data-url (count encoding-prefix))
           image (ImageIO/read (ByteArrayInputStream. (.decode decoder data-string)))]
       image)))
+
+(defn ^String export-image [^BufferedImage buffered-image]
+  (let [baos (ByteArrayOutputStream.)]
+    (ImageIO/write buffered-image "png" baos)
+    (str encoding-prefix (.encodeToString (Base64/getEncoder) (.toByteArray baos)))))
+
+(defn mapdate [x f & args] ; todo should be hard-coded to update, with another fn 'mapssoc'?
+  (mapv #(apply f % args) x))
+
+(defn import-images [data]
+  (update data :presents mapdate update :images mapdate import-image))
+
+(defn export-images [data]
+  (update data :presents mapdate update :images mapdate export-image))
 
 (defmethod print-method BufferedImage [value ^Writer w]
   (.write w (str "Image[" (.getWidth value) "x" (.getHeight value) "]")))
@@ -89,13 +100,21 @@
 (defn next-player-string [data]
   (some-> data :next-player (str " to play!")))
 
-(defonce data (add-watch (atom {}) :save!
-                         (fn [_k _r _o n]
-                           (spit (io/file (str "save-data-" (Instant/now) ".txt"))
-                                 (string/join "\n"
-                                   [(remaining-string n)
-                                    (status-string n)
-                                    (next-player-string n)])))))
+(def dir (let [r (io/file (str (LocalDate/now)))]
+           (.mkdir r)
+           r))
+
+(defn watch-state [_k _r _o n]
+  (spit (io/file dir (str "save-data-" (Instant/now) ".txt"))
+        (string/join "\n"
+          [(remaining-string n)
+           (status-string n)
+           (next-player-string n)]))
+
+  (spit (io/file dir (str "save-data-" (Instant/now) ".edn"))
+        (pr-str (export-images n))))
+
+(defonce data (add-watch (atom {}) :save! watch-state))
 
 (defn set-random-seed [seed]
   (let [field (.getDeclaredField Math$RandomNumberGeneratorHolder "randomNumberGenerator")]
@@ -187,7 +206,7 @@
 (defn reset-rendering-data [existing-rendering-data]
   (some-> existing-rendering-data :stop-fn .invoke)
   (let [image (BufferedImage. see-width see-height BufferedImage/TYPE_INT_ARGB)
-        queue (async/chan 1000)]
+        queue (async/chan 1000)] ; todo: is queue too long?
     {:image         image
      :refresh-fn    (see/see image :fps 25 :only-draw-when-updated? true)
      :queue         queue
@@ -229,7 +248,26 @@
   (prepare-data (import-data directory-name))
   (check-data)
   (swap! rendering-data reset-rendering-data)
-  (enqueue-image elephant))
+  (enqueue-image elephant)
+  (status))
+
+(defn resume
+  ([]
+   (resume (->> (str (LocalDate/now))
+                io/file
+                file-seq
+                (filter #(-> % str (.endsWith ".edn")))
+                sort
+                last)))
+  ([file]
+   (remove-watch data :save!)
+   (let [resumed-data (edn/read-string (slurp file))]
+     (reset! data (import-images resumed-data)))
+   (add-watch data :save! watch-state)
+   (check-data)
+   (swap! rendering-data reset-rendering-data)
+   (enqueue-image elephant)
+   (status)))
 
 (defn show [present-number]
   (let [{:keys [status opened opened-long images]} (get-in @data [:presents present-number])
@@ -368,6 +406,7 @@
   (println "(who's-next?) to see who's turn it is")
   (println "(pick n) to pick present 'n'")
   (println "(show n) to have a look at present 'n'")
+  (println "(resume) to pick up where you left off (optionally takes a specific file)")
   (println "(help) to show this message"))
 
 (help)
@@ -413,10 +452,21 @@
        :presents
        (map :wrapped)
        shuffle
-       (string/join "\n"))
+       (string/join "\n")
+       println)
 
   ; see data safely
   (-> data
       deref
       (update :presents (fn [presents]
-                          (map #(select-keys % [:index :opened :opened-long]) presents)))))
+                          (map #(dissoc % :index :opened :opened-long) presents)))
+      :presents
+      (->> (map :images)))
+
+  ; check images are present
+  (-> data
+      deref
+      (update :presents (fn [presents]
+                          (map #(dissoc % :index :opened :opened-long) presents)))
+      :presents
+      (->> (map :images))))
